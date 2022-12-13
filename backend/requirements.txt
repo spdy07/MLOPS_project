@@ -1,0 +1,10 @@
+flask
+joblib
+sklearn
+scikit-learn
+pandas
+# shapash
+# datapane
+# plotly
+catboost
+eurybia
