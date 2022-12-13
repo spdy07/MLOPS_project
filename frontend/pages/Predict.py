@@ -25,7 +25,7 @@ def main():
     print(health, trade, finance)
     prediction, status = predict(health, trade, finance)
     if status == 400:
-      st.write(f"Error : {prediction.get('Error')}")
+      st.error(f"Error : {prediction.get('Error')}")
     else:
       st.write(f"The prediction is : {prediction.get('prediction')}")
   

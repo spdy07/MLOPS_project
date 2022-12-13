@@ -1,12 +1,19 @@
-from flask import Flask
+from flask import Flask, send_file
 from flask import request
 import joblib
 import json
 import pandas as pd
+from eurybia import SmartDrift
+import datetime
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
 
 app = Flask(__name__)
 
 model = joblib.load('./models/model.joblib')
+data = pd.read_pickle('./datas/Country-data.pkl')
+auc = pd.DataFrame(columns=['date', 'auc'])
+pd.concat([auc, pd.DataFrame([[datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"), 0.5]], columns=auc.columns)], axis=0)
+print(auc)
 
 @app.route("/predict", methods=['POST'])
 def model_predict():
@@ -32,28 +39,21 @@ def model_predict():
     status=status,
   )
 
-data = pd.read_csv('./datas/Country-data.csv')
 @app.route("/add-data", methods=['POST'])
 def add_data():
-  country = request.get_json()['country']
-  child_mort = request.get_json()['child_mort']
-  exports = request.get_json()['exports']
-  health = request.get_json()['health']
-  imports = request.get_json()['imports']
-  income = request.get_json()['income']
-  inflation = request.get_json()['inflation']
-  life_expec = request.get_json()['life_expec']
-  total_fer = request.get_json()['total_fer']
-  gdpp = request.get_json()['gdpp']
+  Country = request.get_json()['Country']
+  Health = request.get_json()['Health']
+  Trade = request.get_json()['Trade']
+  Finance = request.get_json()['Finance']
   
   global data
   
-  if country == None or child_mort == None or exports == None or health == None or imports == None or income == None or life_expec == None or total_fer == None or gdpp == None:
+  if Country == None or Health == None or Trade == None or Finance == None:
     response = {"Error": "Please provide all the features"}
     status = 400
   else:
-    new_row = pd.DataFrame([[country, child_mort, exports, health, imports, income, inflation, life_expec, total_fer, gdpp]], columns=data.columns)
-    data = data.append(new_row, ignore_index=True)
+    new_row = pd.DataFrame([[Country, Health, Trade, Finance]], columns=data.columns)
+    data = pd.concat([data, new_row], axis=0)
     response =  {"message": "Data added"}
     status = 200
 
@@ -63,5 +63,39 @@ def add_data():
       status=status,
     )
   
+@app.route("/get-report", methods=['GET'])
+def get_report():
+  global data
+  global auc
+  date = datetime.datetime.now()
+  print(data)
+
+  sd = SmartDrift(
+    df_current=data.drop(['Country'], axis=1),
+    df_baseline=data.drop(['Country'], axis=1),
+  )
+  sd.compile(
+      full_validation=True,
+      date_compile_auc=date,
+  )
+  sd.generate_report(output_file='reports/report-'  + date.strftime("%Y-%m-%d-%H-%M-%S") + '.html')
+  
+  print(f"auc before {auc}")
+  new_row = pd.DataFrame([[date, sd.auc]], columns=auc.columns)
+  auc = pd.concat([auc, new_row])
+  print(f"auc after {auc}")
+  
+  return send_file('./reports/report-'  + date.strftime("%Y-%m-%d-%H-%M-%S") + '.html', mimetype='text/html', as_attachment=True), 200
+
+@app.route("/get-auc", methods=['GET'])
+def get_auc():
+  global auc
+  return app.response_class(
+      response=json.dumps({'AUC': auc.to_dict()}),
+      status=200,
+    )
+  
+
+  
 if __name__ == "__main__":
-    app.run("0.0.0.0", port=3000)
+  app.run("0.0.0.0", port=3000)

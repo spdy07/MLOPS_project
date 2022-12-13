@@ -5,7 +5,7 @@ import joblib
 
 
 def get_dataset():
-  return pd.read_csv('../datas/Country-data.csv')
+  return pd.read_csv('./datas/Country-data.csv')
 
 def feature_engineering(data):
 
@@ -24,6 +24,7 @@ def feature_engineering(data):
   df1['Trade'] = mms.fit_transform(df1[['Trade']])
   df1['Finance'] = mms.fit_transform(df1[['Finance']])
   df1.insert(loc = 0, value = list(data['country']), column = 'Country')
+  print(df1.head())
   return df1
 
 def train_model(df1):
@@ -45,7 +46,10 @@ def model_predict(model, Health, Trade, Finance):
 def save_model(model):
   joblib.dump(model, './models/model.joblib')
   
-
+data = get_dataset()
+df = feature_engineering(data)
 model2 = joblib.load('./models/model.joblib')
 pred2 = model_predict(model2, 0.62, 0.2, 0.08)
 print(f"Your country {pred2}")
+
+pd.to_pickle(df, './datas/Country-data.pkl')
