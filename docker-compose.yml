@@ -1,4 +1,6 @@
-version: '3.1'
+# Use root/example as user/password credentials
+version: '3.3'
+
 services:
   db:
     image: mysql
@@ -16,47 +18,28 @@ services:
     command: python populate.py
     depends_on:
       - db
+  
+  backend:
+    build: ./backend
+    ports:
+      - 3000:3000
+    # depends_on:
+    #   - db
+    networks:
+      - app-network
 
-#version: '3.3'
-#services:
-#  db:
-#    image: mysql:5.7
-#    restart: always
-#    environment:
-#      MYSQL_DATABASE: 'db'
-#      # So you don't have to use root, but you can if you like
-#      MYSQL_USER: 'user'
-#      # You can use whatever password you like
-#      MYSQL_PASSWORD: 'password'
-#      # Password for root access
-#      MYSQL_ROOT_PASSWORD: 'password'
-#    ports:
-#      # <Port exposed> : < MySQL Port running inside container>
-#      - '3306:3306'
-#    expose:
-#      # Opens port 3306 on the container
-#      - '3306'
-#      # Where our data will be persisted
-#    volumes:
-#      - my-db:/var/lib/mysql
-## Names our volume
-#volumes:
-##
-#  my-db:
-##
+  frontend:
+    build: ./frontend
+    ports:
+      - 8501:8501
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_URL=http://backend:3000
+    networks:
+      - app-network
 
 
-#LOAD DATA INFILE '/Users/youennloie/PycharmProjects/MLOPS_project/datas/Country-data.csv' INTO TABLE country
-#FIELDS TERMINATED BY ','
-#ENCLOSED BY '"'
-#LINES TERMINATED BY '\n'
-#IGNORE 1 ROWS;
-
-#CREATE TABLE mydb.country (
-#  id INT AUTO_INCREMENT PRIMARY KEY,
-#  name VARCHAR(255) NOT NULL,
-#  population INT NOT NULL,
-#  area INT NOT NULL
-#);
-#
-#mysql -uroot -p
+networks:
+  app-network:
+    driver: bridge
