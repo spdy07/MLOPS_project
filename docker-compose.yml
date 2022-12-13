@@ -2,17 +2,22 @@
 version: '3.3'
 
 services:
-  # db:
-  #   image: mysql
-  #   command: --default-authentication-plugin=mysql_native_password
-  #   restart: always
-  #   environment:
-  #     MYSQL_DATABASE: 'db'
-  #     MYSQL_ROOT_PASSWORD: password
-  #   ports:
-  #     - 3306:3306
-  #   volumes:
-  #     - ./db_data:/var/lib/mysql
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: mydb
+      MYSQL_SECURE_FILE_PRIV: ""
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+  populate:
+    build: .
+    command: python populate.py
+    depends_on:
+      - db
   
   backend:
     build: ./backend
@@ -38,4 +43,3 @@ services:
 networks:
   app-network:
     driver: bridge
-  
