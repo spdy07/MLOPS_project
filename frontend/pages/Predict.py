@@ -4,6 +4,7 @@ import json
 import os
 
 api = os.environ.get('BACKEND_URL')
+# api = "http://localhost:3000"
 
 
 def predict(health, trade, finance):
@@ -27,7 +28,7 @@ def main():
     if status == 400:
       st.error(f"Error : {prediction.get('Error')}")
     else:
-      st.write(f"The prediction is : {prediction.get('prediction')}")
+      st.write(f"Your country {prediction.get('prediction')}")
   
 if __name__ == "__main__":
   main()

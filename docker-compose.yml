@@ -1,5 +1,10 @@
-# Use root/example as user/password credentials
-version: '3.3'
+version: '3.7'
+
+networks:
+  app-network:
+    driver: bridge
+  db-network:
+    driver: bridge
 
 services:
   db:
@@ -8,26 +13,19 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: mydb
-      MYSQL_SECURE_FILE_PRIV: ""
     ports:
-      - '3306:3306'
-    expose:
-      - '3306'
-  populate:
-    build: .
-    command: python populate.py
-    depends_on:
-      - db
-  
+      - 3306:3306
+    networks:
+      - db-network
   backend:
     build: ./backend
     ports:
       - 3000:3000
-    # depends_on:
-    #   - db
+    depends_on:
+      - db
     networks:
       - app-network
-
+      - db-network
   frontend:
     build: ./frontend
     ports:
@@ -38,8 +36,3 @@ services:
       - BACKEND_URL=http://backend:3000
     networks:
       - app-network
-
-
-networks:
-  app-network:
-    driver: bridge

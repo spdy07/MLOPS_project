@@ -2,7 +2,7 @@ import pandas as pd
 import mysql.connector
 
 # Read the CSV file
-df = pd.read_csv('/Users/youennloie/PycharmProjects/MLOPS_project/datas/Country-data.csv')
+df = pd.read_pickle('datas/Country-data.pkl')
 
 # Extract the data from the DataFrame
 data = df.to_dict('records')
@@ -12,7 +12,8 @@ cnx = mysql.connector.connect(
     host='db',
     user='root',
     password='password',
-    database='mydb'
+    database='mydb',
+    port=3306
 )
 
 # Insert the data into the database
